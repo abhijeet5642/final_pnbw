@@ -8,7 +8,9 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
 import Loader from '../components/Loader.jsx';
-import { FiMapPin, FiDollarSign, FiHome, FiZap, FiMaximize } from 'react-icons/fi';
+import MapEmbed from '../components/MapEmbed.jsx';
+import { FiMapPin, FiHome, FiZap, FiMaximize } from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
 
 // Define the base URL for your backend server's uploads
 const BACKEND_URL = 'http://localhost:5000';
@@ -27,6 +29,11 @@ export default function PropertyDetail() {
       setError(null);
       try {
         const data = await getPropertyById(id);
+        
+        // --- THIS IS THE CRUCIAL DEBUGGING LINE ---
+        // It will print the exact data arriving from your backend to the browser console.
+        console.log("RAW DATA FROM API:", JSON.stringify(data, null, 2));
+
         setProperty(data);
       } catch (err) {
         console.error("Failed to load property details:", err);
@@ -55,6 +62,7 @@ export default function PropertyDetail() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 py-16 sm:py-20">
       <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 space-y-12">
+        {/* --- Main Property Info Section --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-3">
             {property.title}
@@ -63,6 +71,7 @@ export default function PropertyDetail() {
             <FiMapPin className="mr-2 text-blue-500" /> {property.location}
           </p>
 
+          {/* --- Image Carousel --- */}
           {property.images && property.images.length > 0 ? (
             <div className="relative h-96 sm:h-[500px] mb-6 rounded-xl overflow-hidden shadow-lg">
               <Swiper
@@ -76,7 +85,6 @@ export default function PropertyDetail() {
                 {property.images.map((imgFilename, index) => (
                   <SwiperSlide key={index}>
                     <img
-                      // Construct the full image URL from the backend
                       src={`${BACKEND_URL}/uploads/${imgFilename}`}
                       alt={`${property.title} - ${index + 1}`}
                       className="w-full h-full object-cover"
@@ -92,13 +100,16 @@ export default function PropertyDetail() {
              </div>
           )}
 
+          {/* --- Price Display --- */}
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8">
             <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 flex items-center">
-              <FiDollarSign className="mr-2" /> {property.price.toLocaleString('en-IN')}
+              <FaRupeeSign className="mr-2" /> 
+              {property.price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
             </p>
           </div>
         </section>
 
+        {/* --- Key Details Section --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-8 inline-block">Key Details</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-lg">
@@ -108,12 +119,23 @@ export default function PropertyDetail() {
           </div>
         </section>
 
+        {/* --- Description Section --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-4 inline-block">Description</h2>
           <p className="text-gray-800 leading-relaxed text-lg">
             {property.description}
           </p>
         </section>
+        
+        {/* --- Map Section --- */}
+        {/* This checks for the nested object and the correct "lat" and "lng" fields */}
+        {property.locationCoords && property.locationCoords.lat && property.locationCoords.lng && (
+          <MapEmbed 
+            lat={property.locationCoords.lat} 
+            lng={property.locationCoords.lng}
+            address={property.location} 
+          />
+        )}
       </div>
     </main>
   );

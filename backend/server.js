@@ -2,9 +2,9 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import path from "path"; // <-- ADD THIS LINE
-import { fileURLToPath } from "url"; // <-- ADD THIS LINE
-import { connectDB } from "./config/db.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import mongoose from "mongoose"; // Import mongoose here
 
 import authRoutes from "./routes/auth.js";
 import propertyRoutes from "./routes/properties.js";
@@ -14,8 +14,23 @@ import helmet from "helmet";
 // Load env vars
 dotenv.config();
 
-// Connect to database
+// --- DATABASE CONNECTION & DEBUGGING ---
+// All connection logic is now in this file.
+const connectDB = async () => {
+  try {
+    // This console.log MUST appear in your terminal.
+    console.log("ATTEMPTING TO CONNECT WITH THIS URI:", process.env.MONGO_URI);
+    
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
+};
 connectDB();
+// --- END OF CONNECTION LOGIC ---
+
 
 // These lines are needed to use __dirname with ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -27,14 +42,11 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.json());
 
-
 // Helmet CSP settings
 app.use((req, res, next) => {
   res.removeHeader("Content-Security-Policy");
   next();
 });
-
-
 
 // Enable CORS
 app.use(cors({
@@ -42,7 +54,6 @@ app.use(cors({
 }));
 
 // Set the 'uploads' folder as a static folder
-// This makes images accessible via URLs like http://localhost:5000/uploads/image.jpg
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
 // Mount routers
