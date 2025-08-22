@@ -1,34 +1,33 @@
+// src/store/useAuthStore.js
+
 import { create } from 'zustand';
 import * as authAPI from '../api/auth.js';
 
 export const useAuthStore = create((set) => ({
-  // Initialize user from localStorage. The user object now includes the token.
-  user: authAPI.getCurrentUser(),
+  user: null,
+  isLoading: true,
 
-  // Register a new user
-  register: async (userData) => {
-    // This API call just returns a success message, doesn't log the user in.
-    return await authAPI.register(userData);
+  init: () => {
+    try {
+      const user = authAPI.getCurrentUser();
+      set({ user, isLoading: false });
+    } catch (e) {
+      console.error("Failed to initialize auth store", e);
+      set({ user: null, isLoading: false });
+    }
   },
 
-  // Verify the OTP for a given email
-  verifyOtp: async (otpData) => {
-    // Also returns a success message, doesn't log in.
-    return await authAPI.verifyOtp(otpData);
-  },
-
-  // Log in with email and password
+  // ... your other functions like login, logout etc.
   login: async (creds) => {
-    // The authAPI.login function handles storing the user data in localStorage
     const user = await authAPI.login(creds);
-    // Update the state with the new user data (which includes the token)
     set({ user });
     return user;
   },
-
-  // Log out the user
+  
   logout: () => {
     authAPI.logout();
     set({ user: null });
   },
 }));
+
+// The line that caused the loop has been removed from the bottom of this file.

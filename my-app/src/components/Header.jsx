@@ -9,7 +9,7 @@ export default function Header() {
   const logout = useAuthStore((s) => s.logout);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Base navigation links visible to everyone
+  // Base navigation links
   let navLinks = [
     { to: '/', label: 'Home', exact: true },
     { to: '/about', label: 'About' },
@@ -19,14 +19,12 @@ export default function Header() {
   ];
 
   // --- THIS IS THE FIX ---
-  // The condition is now updated to check user.role
+  // The link now correctly points to "/admin"
   if (user && user.role === 'admin') {
-    const adminLink = { to: '/admin/dashboard', label: 'Admin Dashboard' };
-    // Add the admin link right after the "Home" link
+    const adminLink = { to: '/admin', label: 'Admin Dashboard' };
     navLinks.splice(1, 0, adminLink);
   }
 
-  // Premium base styles
   const btnBase =
     'px-6 py-2.5 text-lg rounded-full font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 shadow-md backdrop-blur-sm';
   const navIdle =
@@ -44,10 +42,6 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 flex flex-wrap items-center justify-between px-4 py-3 md:px-8 md:py-4 bg-white shadow-lg border-b border-gray-200">
-      
-      {/* The temporary debugging block has been removed */}
-
-      {/* Logo and Title Section */}
       <Link to="/" className="flex items-center gap-3 md:gap-5 flex-grow md:flex-grow-0 justify-center md:justify-start">
         <motion.img
           src="/images/logo.jpg"
@@ -71,7 +65,6 @@ export default function Header() {
         </motion.h1>
       </Link>
 
-      {/* Mobile Menu Button (Hamburger) */}
       <div className="md:hidden flex items-center">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -84,7 +77,6 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Desktop Navigation and Auth Buttons */}
       <div className="hidden md:flex items-center gap-10">
         <nav className="flex gap-7">
           {navLinks.map(({ to, label, exact }) => (
@@ -117,7 +109,6 @@ export default function Header() {
         )}
       </div>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div

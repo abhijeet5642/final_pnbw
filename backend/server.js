@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.js";
 import propertyRoutes from "./routes/properties.js";
 import userRoutes from "./routes/users.js";
 import helmet from "helmet";
+import enquiryRoutes from "./routes/enquiryRoutes.js"
 
 // Load env vars
 dotenv.config();
@@ -60,6 +61,8 @@ app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/users", userRoutes);
+// ... after other app.use statements for routes
+app.use("/api/enquiries", enquiryRoutes);
 
 // Health check
 app.get("/", (req, res) => {

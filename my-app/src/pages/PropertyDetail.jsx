@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getPropertyById } from '../api/properties.js';
+import { createEnquiry } from '../api/enquiries.js'; 
+import { useAuthStore } from '../store/useAuthStore.js';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -12,7 +14,6 @@ import MapEmbed from '../components/MapEmbed.jsx';
 import { FiMapPin, FiHome, FiZap, FiMaximize } from 'react-icons/fi';
 import { FaRupeeSign } from 'react-icons/fa';
 
-// Define the base URL for your backend server's uploads
 const BACKEND_URL = 'http://localhost:5000';
 
 export default function PropertyDetail() {
@@ -22,6 +23,13 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [enquiryState, setEnquiryState] = useState({
+    loading: false,
+    error: null,
+    success: false,
+  });
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -29,11 +37,6 @@ export default function PropertyDetail() {
       setError(null);
       try {
         const data = await getPropertyById(id);
-        
-        // --- THIS IS THE CRUCIAL DEBUGGING LINE ---
-        // It will print the exact data arriving from your backend to the browser console.
-        console.log("RAW DATA FROM API:", JSON.stringify(data, null, 2));
-
         setProperty(data);
       } catch (err) {
         console.error("Failed to load property details:", err);
@@ -45,6 +48,17 @@ export default function PropertyDetail() {
 
     fetchProperty();
   }, [id]);
+  
+  const handleEnquiry = async () => {
+    setEnquiryState({ loading: true, error: null, success: false });
+    try {
+      await createEnquiry(id);
+      setEnquiryState({ loading: false, error: null, success: true });
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to send enquiry.';
+      setEnquiryState({ loading: false, error: errorMessage, success: false });
+    }
+  };
 
   if (loading) return <Loader />;
   if (error) return (
@@ -62,7 +76,6 @@ export default function PropertyDetail() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 py-16 sm:py-20">
       <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 space-y-12">
-        {/* --- Main Property Info Section --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-3">
             {property.title}
@@ -71,14 +84,11 @@ export default function PropertyDetail() {
             <FiMapPin className="mr-2 text-blue-500" /> {property.location}
           </p>
 
-          {/* --- Image Carousel --- */}
           {property.images && property.images.length > 0 ? (
             <div className="relative h-96 sm:h-[500px] mb-6 rounded-xl overflow-hidden shadow-lg">
               <Swiper
                 modules={[Navigation, Pagination, Autoplay]}
-                navigation
-                pagination={{ clickable: true }}
-                loop={true}
+                navigation pagination={{ clickable: true }} loop={true}
                 autoplay={{ delay: 4000, disableOnInteraction: false }}
                 className="h-full w-full"
               >
@@ -100,16 +110,39 @@ export default function PropertyDetail() {
              </div>
           )}
 
-          {/* --- Price Display --- */}
+          {/* --- CORRECTED PRICE DISPLAY SECTION --- */}
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8">
             <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 flex items-center">
               <FaRupeeSign className="mr-2" /> 
               {property.price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
             </p>
           </div>
+
+          {user && !user.isAdmin && (
+            <div className="mt-8 pt-8 border-t border-gray-200 text-center">
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">Interested in this property?</h3>
+              {!enquiryState.success ? (
+                <button
+                  onClick={handleEnquiry}
+                  disabled={enquiryState.loading}
+                  className="inline-block px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg rounded-full transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {enquiryState.loading ? 'Sending...' : 'Send Enquiry'}
+                </button>
+              ) : (
+                <p className="text-center text-green-600 font-semibold bg-green-50 p-4 rounded-lg border border-green-200">
+                  ✔ Your enquiry has been sent successfully! Our team will contact you shortly.
+                </p>
+              )}
+              {enquiryState.error && (
+                <p className="text-center text-red-600 font-medium bg-red-50 p-3 rounded-lg border border-red-200 mt-4">
+                  {enquiryState.error}
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
-        {/* --- Key Details Section --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-8 inline-block">Key Details</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-lg">
@@ -119,7 +152,6 @@ export default function PropertyDetail() {
           </div>
         </section>
 
-        {/* --- Description Section --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-4 inline-block">Description</h2>
           <p className="text-gray-800 leading-relaxed text-lg">
@@ -127,8 +159,6 @@ export default function PropertyDetail() {
           </p>
         </section>
         
-        {/* --- Map Section --- */}
-        {/* This checks for the nested object and the correct "lat" and "lng" fields */}
         {property.locationCoords && property.locationCoords.lat && property.locationCoords.lng && (
           <MapEmbed 
             lat={property.locationCoords.lat} 

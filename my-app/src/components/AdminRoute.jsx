@@ -1,32 +1,27 @@
+// src/components/AdminRoute.jsx
+
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-// The import for useAuthStore has been commented out because the file path could not be resolved.
-// Please ensure the path is correct for your project structure and uncomment it.
-// import { useAuthStore } from '../store/useAuthStore';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore.js';
 
-const AdminRoute = ({ children }) => {
-  // The line below is commented out to prevent the app from crashing due to the unresolved import.
-  // You will need to fix the import path above and uncomment this line.
-  // const user = useAuthStore((state) => state.user);
+export default function AdminRoute() {
+  // --- THIS IS THE FIX ---
+  // We select each piece of state individually.
+  // This is a stable way to select from the store and prevents infinite loops.
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
 
-  // --- MOCK USER DATA FOR DEMONSTRATION ---
-  // This is a placeholder to allow the component's logic to be demonstrated.
-  // Replace this with the actual user from your store once the import is fixed.
-  const user = { role: 'admin' }; // Example: Try changing 'admin' to 'user' to see the redirect.
+  // 1. While the store is loading, show a loading message
+  if (isLoading) {
+    return <div>Loading authentication status...</div>;
+  }
 
-  // First, check if the user is logged in.
-  if (!user) {
+  // 2. After loading, check if user is an admin
+  if (!user || user.role !== 'admin') {
+    // If not, redirect them to the login page
     return <Navigate to="/login" replace />;
   }
 
-  // Next, check if the user has the 'admin' role.
-  if (user.role !== 'admin') {
-    // If they are logged in but not an admin, redirect to the homepage.
-    return <Navigate to="/" replace />;
-  }
-
-  // If all checks pass, render the child components.
-  return children;
-};
-
-export default AdminRoute;
+  // 3. If they are an admin, show the admin page content
+  return <Outlet />;
+}

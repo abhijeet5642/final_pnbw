@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore.js';
-// Removed Settings and LifeBuoy from the import statement
-import { LayoutDashboard, Users, MapPin, LogOut } from 'lucide-react'; 
+// 1. Import a new icon for the enquiries link
+import { LayoutDashboard, Users, MapPin, LogOut, MessageSquare } from 'lucide-react'; 
 
 export default function AdminLayout() {
   const user = useAuthStore((s) => s.user);
@@ -30,7 +30,7 @@ export default function AdminLayout() {
             PNBW <span className="text-blue-600">Admin</span>
           </h2>
           {user && (
-            <p className="text-sm text-gray-500 mt-2">Welcome, {user.name || 'Admin User'}</p>
+            <p className="text-sm text-gray-500 mt-2">Welcome, {user.fullName || 'Admin User'}</p>
           )}
         </div>
 
@@ -44,7 +44,10 @@ export default function AdminLayout() {
           <NavLink to="/admin/properties" className={navLinkClass}>
             <MapPin size={20} /> Property Management
           </NavLink>
-          {/* Removed the NavLinks for Settings and Help & Support */}
+          {/* 2. Add the new NavLink for Enquiries */}
+          <NavLink to="/admin/enquiries" className={navLinkClass}>
+            <MessageSquare size={20} /> Enquiries
+          </NavLink>
         </nav>
 
         {/* User & Logout */}
@@ -52,11 +55,11 @@ export default function AdminLayout() {
           <div className="mt-auto pt-6 border-t border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img
-                src={user.avatar || 'https://i.pravatar.cc/40?img=6'} // Example avatar, use user.avatar if available
+                src={user.avatar || 'https://i.pravatar.cc/40?img=6'}
                 alt="Admin avatar"
                 className="w-10 h-10 rounded-full border-2 border-blue-400 shadow-md"
               />
-              <span className="text-gray-800 font-semibold">{user.username || 'Admin'}</span>
+              <span className="text-gray-800 font-semibold">{user.fullName || 'Admin'}</span>
             </div>
             <button
               onClick={handleLogout}
