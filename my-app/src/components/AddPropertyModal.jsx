@@ -6,7 +6,7 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
     title: '',
     description: '',
     propertyType: 'Apartment',
-    price: '',
+    price: '', // Will now store a string like "9000-60000 per yard"
     units: '',
     bedrooms: '',
     bathrooms: '',
@@ -23,32 +23,35 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
     submittedBy: '',
   });
   const [newAmenity, setNewAmenity] = useState('');
-  const [currentStep, setCurrentStep] = useState(1); // New state for tabs
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const propertyTypes = ['Apartment', 'Villa', 'Plot', 'Commercial Space', 'Farmhouse'];
+  const propertyTypes = [
+    'Apartment', 'Villa', 'Plot', 'Commercial Space', 'Farmhouse',
+    'Penthouse', 'Studio Apartment', 'Duplex', 'Row House', 'Independent House',
+    'Service Apartment', 'Co-working Space', 'Retail Shop', 'Office Space',
+    'Warehouse', 'Agricultural Land', 'Industrial Plot', 'Residential Plot',
+    'Resort Property', 'Guest House', 'Builder Floor', 'Loft Apartment'
+  ];
   const furnishingOptions = ['Unfurnished', 'Semi-Furnished', 'Furnished'];
   const possessionOptions = ['Immediate', 'Within 3 Months', 'Under Construction'];
   const commonAmenities = ['Parking', 'Gym', 'Swimming Pool', '24/7 Security', 'Power Backup', 'Lift', 'Garden', 'Clubhouse', 'Kids Play Area'];
 
   const handleChange = (e) => {
-  const { id, value, type, checked, files } = e.target;
-  if (type === 'checkbox') {
-    setFormData((prev) => ({
-      ...prev,
-      amenities: checked
-        ? [...prev.amenities, value]
-        : prev.amenities.filter((item) => item !== value),
-    }));
-  } else if (type === 'file') {
-    // --- THIS IS THE FIX ---
-    // Change 'prev' to 'formData' to access the current state's images
-    const newImages = Array.from(files).filter(file => !formData.images.some(existingFile => existingFile.name === file.name));
-    
-    setFormData((prev) => ({ ...prev, images: [...prev.images, ...newImages] }));
-  } else {
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  }
-};
+    const { id, value, type, checked, files } = e.target;
+    if (type === 'checkbox') {
+      setFormData((prev) => ({
+        ...prev,
+        amenities: checked
+          ? [...prev.amenities, value]
+          : prev.amenities.filter((item) => item !== value),
+      }));
+    } else if (type === 'file') {
+      const newImages = Array.from(files).filter(file => !formData.images.some(existingFile => existingFile.name === file.name));
+      setFormData((prev) => ({ ...prev, images: [...prev.images, ...newImages] }));
+    } else {
+      setFormData((prev) => ({ ...prev, [id]: value }));
+    }
+  };
 
   const handleRemoveImage = (indexToRemove) => {
     setFormData((prev) => ({
@@ -93,10 +96,6 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // The parent component (`PropertyManagement`) is responsible for handling
-    // the form submission, including the API call and state updates.
-    // This modal simply passes the collected form data upwards.
-      
     onAddProperty(formData);
   };
 
@@ -146,10 +145,18 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
               </div>
 
               <div className="space-y-4">
-                <label htmlFor="price" className="block text-gray-700 text-sm font-semibold">Price (in Rupees) <span className="text-red-500">*</span></label>
+                <label htmlFor="price" className="block text-gray-700 text-sm font-semibold">Price (e.g., 9000-60000 per yard) <span className="text-red-500">*</span></label> {/* Updated label */}
                 <div className="relative">
                   <DollarSign size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input type="number" id="price" className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 6200000" value={formData.price} onChange={handleChange} required />
+                  <input 
+                    type="text" // Changed to type="text"
+                    id="price" 
+                    className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-blue-500 focus:border-blue-500" 
+                    placeholder="e.g., 9000-60000 per yard" // Updated placeholder
+                    value={formData.price} 
+                    onChange={handleChange} 
+                    required 
+                  />
                 </div>
                 
                 <label htmlFor="units" className="block text-gray-700 text-sm font-semibold">Area (Sq. Ft.) <span className="text-red-500">*</span></label>

@@ -7,16 +7,8 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
-// --- DEFINE YOUR BACKEND URL HERE ---
-const BACKEND_URL = 'http://localhost:5000';
 
-const toLakhs = (rupees) => {
-  if (rupees === undefined || rupees === null) return 'N/A';
-  const numRupees = Number(rupees);
-  if (isNaN(numRupees)) return 'N/A';
-  const lakhs = Math.round(numRupees / 1_00_000);
-  return `${lakhs} Lakh`;
-};
+const BACKEND_URL = 'http://localhost:5000';
 
 export default function PropertyCard({ property }) {
   const {
@@ -24,7 +16,7 @@ export default function PropertyCard({ property }) {
     title,
     locality,
     city,
-    price,
+    price, // Will now be a string like "9000-60000 per yard"
     area = 0,
     bedrooms = 0,
     bathrooms = 0,
@@ -53,8 +45,6 @@ export default function PropertyCard({ property }) {
             {images.map((imgFilename, index) => (
               <SwiperSlide key={`${_id}-${index}`}>
                 <img
-                  // --- THIS IS THE FIX ---
-                  // It builds the full URL to the image
                   src={`${BACKEND_URL}/uploads/${imgFilename}`}
                   alt={`${title} - ${index + 1}`}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -80,7 +70,7 @@ export default function PropertyCard({ property }) {
           <FiMapPin className="mr-1 text-blue-500" /> {locality}, {city}
         </p>
         <p className="text-md text-gray-700 flex items-center font-semibold">
-          <FiTag className="mr-1 text-green-500" /> {toLakhs(price)}
+          <FiTag className="mr-1 text-green-500" /> ₹ {price || 'N/A'} {/* Display price directly as a string */}
         </p>
         {propertyType && (
           <p className="text-sm text-gray-600 flex items-center">

@@ -1,4 +1,5 @@
 import Property from "../models/Property.js";
+import mongoose from 'mongoose'; // Ensure mongoose is imported if not already
 
 // @desc    Fetch all properties
 // @route   GET /api/properties
@@ -34,19 +35,24 @@ const getPropertyById = async (req, res) => {
   }
 };
 
+// Helper function to safely parse numbers, preventing NaN issues
+const safeParseNumber = (value, defaultValue = null) => {
+  if (value === null || value === undefined || value === '') {
+    return defaultValue;
+  }
+  const num = Number(value);
+  return isNaN(num) ? defaultValue : num;
+};
+
 // @desc    Create a property
 // @route   POST /api/properties
 // @access  Private/Admin
 const createProperty = async (req, res) => {
-
-  // This should show your uploaded files
-  
-  
   const {
     title,
     description,
     propertyType,
-    price,
+    price, // This will now be a string
     units, // Corresponds to 'area'
     bedrooms,
     bathrooms,
@@ -64,53 +70,46 @@ const createProperty = async (req, res) => {
 
   try {
     // --- Step 1: Explicitly check for required fields ---
-    // This provides clearer error messages than the default Mongoose validation.
     if (!title || !description || !propertyType || !price || !units || !locality || !city) {
       return res.status(400).json({ message: 'Please fill all required fields: Title, Description, Type, Price, Area, Locality, and City.' });
     }
 
-    // --- Step 2: Safely parse numbers and provide defaults ---
-    // This helper function prevents the "NaN" error by handling empty strings.
-    const safeParseNumber = (value, defaultValue = null) => {
-      if (value === null || value === undefined || value === '') {
-        return defaultValue;
-      }
-      const num = Number(value);
-      return isNaN(num) ? defaultValue : num;
-    };
+    // Basic validation for the price string format (optional but recommended)
+    const priceRegex = /^\d+-\d+\sper\s\w+$/; // Example: "9000-60000 per yard"
+    if (typeof price !== 'string' || !priceRegex.test(price)) {
+      return res.status(400).json({ message: 'Price must be in "MIN-MAX per UNIT" format (e.g., 9000-60000 per yard).' });
+    }
 
     // Get the filenames from multer if they exist
-  const imagePaths = (Array.isArray(req.files) ? req.files : [])
-  .map(file => `${file.filename}`);
-
+    const imagePaths = (Array.isArray(req.files) ? req.files : [])
+      .map(file => `${file.filename}`);
 
     // --- Step 3: Create the property with clean, validated data ---
     const property = await Property.create({
       title,
       description,
       propertyType,
-      price: safeParseNumber(price), // Use the safe parser for all numbers
+      price: price, // Store price directly as a string
       area: safeParseNumber(units),
-      bedrooms: safeParseNumber(bedrooms, 0), // Default to 0 if empty
-      bathrooms: safeParseNumber(bathrooms, 0), // Default to 0 if empty
+      bedrooms: safeParseNumber(bedrooms, 0),
+      bathrooms: safeParseNumber(bathrooms, 0),
       furnishing,
       possession,
-      builtYear: safeParseNumber(builtYear), // Defaults to null if empty
+      builtYear: safeParseNumber(builtYear),
       location: `${locality}, ${city}`,
       locality,
       city,
-     images: imagePaths,
-
+      images: imagePaths,
       videoUrls: JSON.parse(videoUrls || '[]'),
       amenities: JSON.parse(amenities || '[]'),
       locationCoords: {
-        lat: safeParseNumber(lat), // Defaults to null if empty
-        lng: safeParseNumber(lng), // Defaults to null if empty
+        lat: safeParseNumber(lat),
+        lng: safeParseNumber(lng),
       },
       agent: req.user._id,
       submittedBy,
     });
-    console.log("data saved to database", property)
+    console.log("data saved to database", property);
 
     res.status(201).json(property);
   } catch (error) {
@@ -148,21 +147,58 @@ const updateProperty = async (req, res) => {
       }
     }
 
+    // Update fields, using safeParseNumber for numerical fields
     property.title = req.body.title || property.title;
     property.description = req.body.description || property.description;
-    property.price = req.body.price || property.price;
-    property.location = req.body.location || property.location;
-    property.bedrooms = req.body.bedrooms || property.bedrooms;
-    property.bathrooms = req.body.bathrooms || property.bathrooms;
-    property.area = req.body.area || property.area;
+    property.propertyType = req.body.propertyType || property.propertyType;
+    property.price = req.body.price || property.price; // Price remains a string
+    property.area = safeParseNumber(req.body.area, property.area); // Use safeParseNumber
+    property.bedrooms = safeParseNumber(req.body.bedrooms, property.bedrooms); // Use safeParseNumber
+    property.bathrooms = safeParseNumber(req.body.bathrooms, property.bathrooms); // Use safeParseNumber
+    property.furnishing = req.body.furnishing || property.furnishing;
+    property.possession = req.body.possession || property.possession;
+    property.builtYear = safeParseNumber(req.body.builtYear, property.builtYear); // Use safeParseNumber
+    property.locality = req.body.locality || property.locality;
+    property.city = req.body.city || property.city;
+    property.location = `${property.locality}, ${property.city}`; // Reconstruct location
 
-    // Replace with old+new images
+    // Handle images, video URLs, amenities, and location coordinates
+    if (req.body.videoUrls) {
+      try {
+        property.videoUrls = JSON.parse(req.body.videoUrls);
+      } catch {
+        property.videoUrls = [];
+      }
+    }
+    if (req.body.amenities) {
+      try {
+        property.amenities = JSON.parse(req.body.amenities);
+      } catch {
+        property.amenities = [];
+      }
+    }
+    if (req.body.lat && req.body.lng) {
+      property.locationCoords = {
+        lat: safeParseNumber(req.body.lat, property.locationCoords?.lat),
+        lng: safeParseNumber(req.body.lng, property.locationCoords?.lng),
+      };
+    } else if (req.body.lat === '' || req.body.lng === '') { // Allow clearing coords
+        property.locationCoords = { lat: null, lng: null };
+    }
+
+
+    // Combine existing and new images
     property.images = [...existingImages, ...newImages];
+    property.submittedBy = req.body.submittedBy || property.submittedBy;
+
 
     const updatedProperty = await property.save();
     res.json(updatedProperty);
   } catch (error) {
     console.error("Error updating property:", error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Validation Error', errors: error.errors });
+    }
     res.status(500).json({ message: "Server Error" });
   }
 };

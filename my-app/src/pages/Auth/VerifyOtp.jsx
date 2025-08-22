@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useAuthStore } from '../../store/useAuthStore'; // Ensure correct path
 
 export default function VerifyOtp() {
   const [otp, setOtp] = useState('');
@@ -28,7 +28,8 @@ export default function VerifyOtp() {
     setError(null);
     setLoading(true);
     try {
-      await verifyOtp({ email, otp });
+      // --- FIX IS HERE: Pass email and otp as separate arguments ---
+      await verifyOtp(email, otp); 
       alert('Email verified successfully! You can now log in.');
       navigate('/login');
     } catch (err) {

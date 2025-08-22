@@ -19,7 +19,7 @@ export default function Login() {
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('customer');
+  // Removed: const [role, setRole] = useState('customer');
   
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -61,24 +61,25 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const user = await login({ email, password, role });
+      // Modified: Removed 'role' from the login call
+      const user = await login({ email, password });
       
-      // --- FIX #1 ---
       if (user && user.role === 'admin') {
-        navigate('/admin'); // Corrected path
+        navigate('/admin');
       } else {
         navigate('/');
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSendOtp = async () => {
-    console.log(`Pretending to send OTP to ${phone} for role ${role}`);
+    console.log(`Pretending to send OTP to ${phone}`); // Modified: Removed role from log
     setStep('enterOtp');
   };
 
@@ -86,11 +87,11 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-        const user = await login({ phone, otp, role });
+        // Modified: Removed 'role' from the login call
+        const user = await login({ phone, otp });
 
-        // --- FIX #2 ---
         if (user && user.role === 'admin') {
-            navigate('/admin'); // Corrected path
+            navigate('/admin');
         } else {
             navigate('/');
         }
@@ -112,24 +113,7 @@ export default function Login() {
           <p className="text-slate-500">Access your real estate dashboard.</p>
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-slate-600 mb-2 block">I am a:</label>
-          <div className="grid grid-cols-3 gap-2 rounded-lg bg-slate-100 p-1">
-            {['customer', 'agent', 'admin'].map((r) => (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  role === r
-                    ? 'bg-white text-blue-700 shadow-sm'
-                    : 'bg-transparent text-slate-500 hover:bg-slate-200'
-                }`}
-              >
-                {r.charAt(0).toUpperCase() + r.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Removed: Role selection UI block */}
 
         <div className="flex bg-slate-100 rounded-lg p-1">
           <button

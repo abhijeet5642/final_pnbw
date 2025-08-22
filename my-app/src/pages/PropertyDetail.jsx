@@ -78,16 +78,16 @@ export default function PropertyDetail() {
       <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 space-y-12">
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-3">
-            {property.title}
+            {property?.title || 'Property Title N/A'} {/* Use optional chaining and fallback */}
           </h1>
           <p className="text-gray-600 text-lg sm:text-xl flex items-center mb-6">
-            <FiMapPin className="mr-2 text-blue-500" /> {property.location}
+            <FiMapPin className="mr-2 text-blue-500" /> {property?.location || 'Location N/A'} {/* Use optional chaining and fallback */}
           </p>
 
-          {property.images && property.images.length > 0 ? (
+          {property?.images && property.images.length > 0 ? (
             <div className="relative h-96 sm:h-[500px] mb-6 rounded-xl overflow-hidden shadow-lg">
               <Swiper
-                modules={[Navigation, Pagination, Autoplay]}
+                modules={[Navigation, Pagination, Autoplay]} 
                 navigation pagination={{ clickable: true }} loop={true}
                 autoplay={{ delay: 4000, disableOnInteraction: false }}
                 className="h-full w-full"
@@ -96,7 +96,7 @@ export default function PropertyDetail() {
                   <SwiperSlide key={index}>
                     <img
                       src={`${BACKEND_URL}/uploads/${imgFilename}`}
-                      alt={`${property.title} - ${index + 1}`}
+                      alt={`${property?.title || 'Property'} - ${index + 1}`}
                       className="w-full h-full object-cover"
                       onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/800x500/e2e8f0/4a5568?text=Image+Error'; }}
                     />
@@ -110,11 +110,10 @@ export default function PropertyDetail() {
              </div>
           )}
 
-          {/* --- CORRECTED PRICE DISPLAY SECTION --- */}
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8">
             <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 flex items-center">
               <FaRupeeSign className="mr-2" /> 
-              {property.price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              {property?.price || 'N/A'} {/* Use optional chaining and fallback */}
             </p>
           </div>
 
@@ -146,20 +145,20 @@ export default function PropertyDetail() {
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-8 inline-block">Key Details</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-lg">
-            <div className="flex items-center"><FiHome className="mr-3 text-blue-500" /> <strong>Bedrooms:</strong><span className="ml-2">{property.bedrooms}</span></div>
-            <div className="flex items-center"><FiZap className="mr-3 text-blue-500" /> <strong>Bathrooms:</strong><span className="ml-2">{property.bathrooms}</span></div>
-            <div className="flex items-center"><FiMaximize className="mr-3 text-blue-500" /> <strong>Area:</strong><span className="ml-2">{property.area} sq. ft.</span></div>
+            <div className="flex items-center"><FiHome className="mr-3 text-blue-500" /> <strong>Bedrooms:</strong><span className="ml-2">{property?.bedrooms || 'N/A'}</span></div>
+            <div className="flex items-center"><FiZap className="mr-3 text-blue-500" /> <strong>Bathrooms:</strong><span className="ml-2">{property?.bathrooms || 'N/A'}</span></div>
+            <div className="flex items-center"><FiMaximize className="mr-3 text-blue-500" /> <strong>Area:</strong><span className="ml-2">{property?.area ? `${property.area} sq. ft.` : 'N/A'}</span></div>
           </div>
         </section>
 
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-4 inline-block">Description</h2>
           <p className="text-gray-800 leading-relaxed text-lg">
-            {property.description}
+            {property?.description || 'No description available.'} {/* Use optional chaining and fallback */}
           </p>
         </section>
         
-        {property.locationCoords && property.locationCoords.lat && property.locationCoords.lng && (
+        {property?.locationCoords && property.locationCoords.lat && property.locationCoords.lng && (
           <MapEmbed 
             lat={property.locationCoords.lat} 
             lng={property.locationCoords.lng}
