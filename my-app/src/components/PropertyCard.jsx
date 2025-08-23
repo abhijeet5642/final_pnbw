@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiChevronRight, FiMapPin, FiTag, FiSquare, FiHome, FiZap } from 'react-icons/fi';
+import { FiChevronRight, FiMapPin, FiTag, FiSquare, FiHome, FiZap, FiChevronLeft } from 'react-icons/fi'; // Import FiChevronLeft
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -8,7 +8,9 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
 
-const BACKEND_URL = 'http://localhost:5000';
+// BEST PRACTICE: Use an environment variable instead of a hardcoded URL.
+// In your frontend's .env file: VITE_BACKEND_URL=http://localhost:5000
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export default function PropertyCard({ property }) {
   const {
@@ -16,7 +18,7 @@ export default function PropertyCard({ property }) {
     title,
     locality,
     city,
-    price, // Will now be a string like "9000-60000 per yard"
+    price,
     area = 0,
     bedrooms = 0,
     bathrooms = 0,
@@ -34,7 +36,7 @@ export default function PropertyCard({ property }) {
           <Swiper
             modules={[Navigation, Pagination, Autoplay]}
             loop
-            navigation={{
+            navigation={{ // These classes target the divs below
               nextEl: `.swiper-button-next-${_id}`,
               prevEl: `.swiper-button-prev-${_id}`,
             }}
@@ -45,15 +47,21 @@ export default function PropertyCard({ property }) {
             {images.map((imgFilename, index) => (
               <SwiperSlide key={`${_id}-${index}`}>
                 <img
-                  src={`${BACKEND_URL}/uploads/${imgFilename}`}
+                  // --- NECESSARY FIX: Removed the extra '/uploads' from the path ---
+                  src={`${BACKEND_URL}/${imgFilename}`}
                   alt={`${title} - ${index + 1}`}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/600x400/e2e8f0/4a5568?text=Image+Error'; }}
                 />
               </SwiperSlide>
             ))}
-            <div className={`swiper-button-prev swiper-button-prev-${_id} absolute left-2 z-10 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-            <div className={`swiper-button-next swiper-button-next-${_id} absolute right-2 z-10 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+            {/* --- UI FIX: Added icons inside the navigation buttons --- */}
+            <div className={`swiper-button-prev swiper-button-prev-${_id} absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}>
+                <FiChevronLeft size={20} />
+            </div>
+            <div className={`swiper-button-next swiper-button-next-${_id} absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}>
+                <FiChevronRight size={20} />
+            </div>
           </Swiper>
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
@@ -70,7 +78,7 @@ export default function PropertyCard({ property }) {
           <FiMapPin className="mr-1 text-blue-500" /> {locality}, {city}
         </p>
         <p className="text-md text-gray-700 flex items-center font-semibold">
-          <FiTag className="mr-1 text-green-500" /> ₹ {price || 'N/A'} {/* Display price directly as a string */}
+          <FiTag className="mr-1 text-green-500" /> ₹ {price || 'N/A'}
         </p>
         {propertyType && (
           <p className="text-sm text-gray-600 flex items-center">

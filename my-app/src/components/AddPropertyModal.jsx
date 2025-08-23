@@ -6,7 +6,7 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
     title: '',
     description: '',
     propertyType: 'Apartment',
-    price: '', // Will now store a string like "9000-60000 per yard"
+    price: '',
     units: '',
     bedrooms: '',
     bathrooms: '',
@@ -22,7 +22,10 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
     amenities: [],
     submittedBy: '',
   });
+
   const [newAmenity, setNewAmenity] = useState('');
+  // State to manage the video URL input field
+  const [videoUrlInput, setVideoUrlInput] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
 
   const propertyTypes = [
@@ -61,9 +64,10 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
   };
 
   const handleAddVideoUrl = () => {
-    const url = prompt("Enter video URL (e.g., YouTube, Vimeo):");
-    if (url && url.trim() !== '') {
-      setFormData((prev) => ({ ...prev, videoUrls: [...prev.videoUrls, url.trim()] }));
+    // Now uses the state-controlled input field instead of prompt()
+    if (videoUrlInput && videoUrlInput.trim() !== '') {
+      setFormData((prev) => ({ ...prev, videoUrls: [...prev.videoUrls, videoUrlInput.trim()] }));
+      setVideoUrlInput(''); // Clear the input after adding
     }
   };
 
@@ -145,18 +149,10 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
               </div>
 
               <div className="space-y-4">
-                <label htmlFor="price" className="block text-gray-700 text-sm font-semibold">Price (e.g., 9000-60000 per yard) <span className="text-red-500">*</span></label> {/* Updated label */}
+                <label htmlFor="price" className="block text-gray-700 text-sm font-semibold">Price (e.g., 9000-60000 per yard) <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <DollarSign size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input 
-                    type="text" // Changed to type="text"
-                    id="price" 
-                    className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-blue-500 focus:border-blue-500" 
-                    placeholder="e.g., 9000-60000 per yard" // Updated placeholder
-                    value={formData.price} 
-                    onChange={handleChange} 
-                    required 
-                  />
+                  <input type="text" id="price" className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-gray-900 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 9000-60000 per yard" value={formData.price} onChange={handleChange} required />
                 </div>
                 
                 <label htmlFor="units" className="block text-gray-700 text-sm font-semibold">Area (Sq. Ft.) <span className="text-red-500">*</span></label>
@@ -182,7 +178,7 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
 
           {currentStep === 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
+               <div className="space-y-4">
                 <label htmlFor="bedrooms" className="block text-gray-700 text-sm font-semibold">Bedrooms</label>
                 <div className="relative">
                   <Bed size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -263,13 +259,13 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
           {currentStep === 3 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <label className="block text-gray-700 text-sm font-semibold">Property Images</label>
-                <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
-                  <input type="file" id="images" multiple accept="image/*" className="absolute opacity-0 w-full h-full cursor-pointer" onChange={handleChange} />
+                <label htmlFor="images" className="block text-gray-700 text-sm font-semibold">Property Images</label>
+                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                  <input type="file" id="images" multiple accept="image/*" className="hidden" onChange={handleChange} />
                   <Upload size={48} className="text-gray-400 mb-2" />
-                  <span className="text-gray-600 font-semibold text-center">Drag & Drop or Click to Upload</span>
-                  <span className="text-sm text-gray-500 text-center">Images must be in JPG, PNG, or GIF format.</span>
-                </div>
+                  <span className="text-gray-600 font-semibold text-center">Click to Upload or Drag & Drop</span>
+                  <span className="text-sm text-gray-500 text-center">JPG, PNG, GIF supported</span>
+                </label>
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {formData.images.map((file, index) => (
                     <div key={index} className="relative aspect-video">
@@ -283,7 +279,15 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
                 
                 <label className="block text-gray-700 text-sm font-semibold">Video URLs</label>
                 <div className="flex items-center gap-2">
-                  <input type="text" id="videoUrlInput" className="flex-1 p-3 border border-gray-300 rounded-lg text-gray-900" placeholder="Paste video URL here" />
+                  {/* FIXED: This input is now controlled by React state */}
+                  <input 
+                    type="text" 
+                    id="videoUrlInput" 
+                    className="flex-1 p-3 border border-gray-300 rounded-lg text-gray-900" 
+                    placeholder="Paste video URL here" 
+                    value={videoUrlInput}
+                    onChange={(e) => setVideoUrlInput(e.target.value)}
+                  />
                   <button type="button" onClick={handleAddVideoUrl} className="p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
                     <PlusCircle size={20} />
                   </button>
@@ -313,7 +317,6 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
                 <p className="text-xs text-gray-500 mt-1">
                   * Use a tool like Google Maps to get precise coordinates.
                 </p>
-                {/* A placeholder for a map component would go here */}
                 <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center text-gray-500 text-sm">
                   Interactive Map Placeholder
                 </div>
@@ -323,39 +326,26 @@ export default function AddPropertyModal({ onClose, onAddProperty }) {
 
           <div className="flex justify-between gap-3 pt-4">
             {currentStep > 1 && (
-              <button
-                type="button"
-                onClick={handlePrevStep}
-                className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition shadow-md font-semibold"
-              >
+              <button type="button" onClick={handlePrevStep} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition shadow-md font-semibold">
                 Previous
               </button>
             )}
             {currentStep < 3 && (
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md font-semibold ml-auto"
-              >
+              <button type="button" onClick={handleNextStep} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md font-semibold ml-auto">
                 Next
               </button>
             )}
             {currentStep === 3 && (
-              <button
-                type="submit"
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md font-semibold ml-auto"
-              >
+              <button type="submit" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md font-semibold ml-auto">
                 Add Property
               </button>
             )}
             {currentStep === 1 && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition shadow-md font-semibold"
-              >
-                Cancel
-              </button>
+               <div className="w-full flex justify-end">
+                <button type="button" onClick={handleNextStep} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md font-semibold">
+                  Next
+                </button>
+              </div>
             )}
           </div>
         </form>

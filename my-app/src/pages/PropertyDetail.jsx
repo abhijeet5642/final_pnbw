@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getPropertyById } from '../api/properties.js';
-import { createEnquiry } from '../api/enquiries.js'; 
+import { createEnquiry } from '../api/enquiries.js';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -14,21 +14,15 @@ import MapEmbed from '../components/MapEmbed.jsx';
 import { FiMapPin, FiHome, FiZap, FiMaximize } from 'react-icons/fi';
 import { FaRupeeSign } from 'react-icons/fa';
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export default function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const [enquiryState, setEnquiryState] = useState({
-    loading: false,
-    error: null,
-    success: false,
-  });
+  const [enquiryState, setEnquiryState] = useState({ loading: false, error: null, success: false });
   const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
@@ -45,10 +39,9 @@ export default function PropertyDetail() {
         setLoading(false);
       }
     };
-
     fetchProperty();
   }, [id]);
-  
+
   const handleEnquiry = async () => {
     setEnquiryState({ loading: true, error: null, success: false });
     try {
@@ -77,17 +70,15 @@ export default function PropertyDetail() {
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 py-16 sm:py-20">
       <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 space-y-12">
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-3">
-            {property?.title || 'Property Title N/A'} {/* Use optional chaining and fallback */}
-          </h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-3">{property.title}</h1>
           <p className="text-gray-600 text-lg sm:text-xl flex items-center mb-6">
-            <FiMapPin className="mr-2 text-blue-500" /> {property?.location || 'Location N/A'} {/* Use optional chaining and fallback */}
+            <FiMapPin className="mr-2 text-blue-500" /> {property.location}
           </p>
 
-          {property?.images && property.images.length > 0 ? (
+          {property.images && property.images.length > 0 ? (
             <div className="relative h-96 sm:h-[500px] mb-6 rounded-xl overflow-hidden shadow-lg">
               <Swiper
-                modules={[Navigation, Pagination, Autoplay]} 
+                modules={[Navigation, Pagination, Autoplay]}
                 navigation pagination={{ clickable: true }} loop={true}
                 autoplay={{ delay: 4000, disableOnInteraction: false }}
                 className="h-full w-full"
@@ -95,8 +86,8 @@ export default function PropertyDetail() {
                 {property.images.map((imgFilename, index) => (
                   <SwiperSlide key={index}>
                     <img
-                      src={`${BACKEND_URL}/uploads/${imgFilename}`}
-                      alt={`${property?.title || 'Property'} - ${index + 1}`}
+                      src={`${BACKEND_URL}/${imgFilename}`}
+                      alt={`${property.title} - ${index + 1}`}
                       className="w-full h-full object-cover"
                       onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/800x500/e2e8f0/4a5568?text=Image+Error'; }}
                     />
@@ -105,18 +96,18 @@ export default function PropertyDetail() {
               </Swiper>
             </div>
           ) : (
-             <div className="relative h-96 sm:h-[500px] mb-6 rounded-xl overflow-hidden shadow-lg bg-gray-200">
-                <img src='https://placehold.co/800x500/e2e8f0/4a5568?text=No+Image' alt="No image available" className="w-full h-full object-cover" />
-             </div>
+            <div className="relative h-96 sm:h-[500px] mb-6 rounded-xl overflow-hidden shadow-lg bg-gray-200">
+              <img src='https://placehold.co/800x500/e2e8f0/4a5568?text=No+Image' alt="No image available" className="w-full h-full object-cover" />
+            </div>
           )}
 
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8">
             <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 flex items-center">
-              <FaRupeeSign className="mr-2" /> 
-              {property?.price || 'N/A'} {/* Use optional chaining and fallback */}
+              <FaRupeeSign className="mr-2" /> {property.price}
             </p>
           </div>
 
+          {/* --- RESTORED CODE START: ENQUIRY BUTTON --- */}
           {user && !user.isAdmin && (
             <div className="mt-8 pt-8 border-t border-gray-200 text-center">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">Interested in this property?</h3>
@@ -140,25 +131,30 @@ export default function PropertyDetail() {
               )}
             </div>
           )}
+          {/* --- RESTORED CODE END: ENQUIRY BUTTON --- */}
         </section>
 
+        {/* --- RESTORED CODE START: KEY DETAILS --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-8 inline-block">Key Details</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-lg">
-            <div className="flex items-center"><FiHome className="mr-3 text-blue-500" /> <strong>Bedrooms:</strong><span className="ml-2">{property?.bedrooms || 'N/A'}</span></div>
-            <div className="flex items-center"><FiZap className="mr-3 text-blue-500" /> <strong>Bathrooms:</strong><span className="ml-2">{property?.bathrooms || 'N/A'}</span></div>
-            <div className="flex items-center"><FiMaximize className="mr-3 text-blue-500" /> <strong>Area:</strong><span className="ml-2">{property?.area ? `${property.area} sq. ft.` : 'N/A'}</span></div>
+            <div className="flex items-center"><FiHome className="mr-3 text-blue-500" /> <strong>Bedrooms:</strong><span className="ml-2">{property.bedrooms || 'N/A'}</span></div>
+            <div className="flex items-center"><FiZap className="mr-3 text-blue-500" /> <strong>Bathrooms:</strong><span className="ml-2">{property.bathrooms || 'N/A'}</span></div>
+            <div className="flex items-center"><FiMaximize className="mr-3 text-blue-500" /> <strong>Area:</strong><span className="ml-2">{property.area ? `${property.area} sq. ft.` : 'N/A'}</span></div>
           </div>
         </section>
+        {/* --- RESTORED CODE END: KEY DETAILS --- */}
 
+        {/* --- RESTORED CODE START: DESCRIPTION --- */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-4 inline-block">Description</h2>
           <p className="text-gray-800 leading-relaxed text-lg">
-            {property?.description || 'No description available.'} {/* Use optional chaining and fallback */}
+            {property.description || 'No description available.'}
           </p>
         </section>
+        {/* --- RESTORED CODE END: DESCRIPTION --- */}
         
-        {property?.locationCoords && property.locationCoords.lat && property.locationCoords.lng && (
+        {property.locationCoords && property.locationCoords.lat && property.locationCoords.lng && (
           <MapEmbed 
             lat={property.locationCoords.lat} 
             lng={property.locationCoords.lng}
