@@ -1,3 +1,4 @@
+// backend/middleware/auth.js
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
@@ -11,6 +12,7 @@ const protect = async (req, res, next) => {
     try {
       // Get token from header
       token = req.headers.authorization.split(" ")[1];
+      console.log("Token found:", token); // ✅ Log the token for debugging
 
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -25,7 +27,7 @@ const protect = async (req, res, next) => {
       next();
     } catch (error) {
       console.error(error);
-      res.status(401).json({ message: "Not authorized, token failed" });
+      return res.status(401).json({ message: "Not authorized, token failed" });
     }
   }
 
@@ -34,4 +36,25 @@ const protect = async (req, res, next) => {
   }
 };
 
-export { protect };
+// Middleware to check if the user is an admin
+const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next(); // User is an admin, so proceed
+  } else {
+    res.status(401);
+    throw new Error('Not authorized as an admin');
+  }
+};
+
+// ✅ ADDED: Middleware to check if the user is a broker
+const broker = (req, res, next) => {
+  if (req.user && req.user.role === 'broker') {
+    next(); // User is a broker, so proceed
+  } else {
+    res.status(401);
+    throw new Error('Not authorized as a broker');
+  }
+};
+
+// ✅ UPDATED: Export statement to include the new 'broker' middleware
+export { protect, admin, broker };

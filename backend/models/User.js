@@ -1,5 +1,6 @@
+// backend/models/User.js
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs'; // Assuming you use bcrypt for password hashing
+import bcrypt from 'bcryptjs';
 
 const userSchema = mongoose.Schema(
   {
@@ -23,18 +24,30 @@ const userSchema = mongoose.Schema(
     role: {
       type: String,
       required: true,
-      // --- THIS IS THE CRITICAL FIX: 'customer' MUST be in this array ---
-      enum: ['admin', 'customer', 'agent'], // Ensure 'customer' is an allowed role
-      default: 'customer', // Default role for new registrations
+      // ✅ CORRECTED: Use 'broker' for consistency
+      enum: ['admin', 'customer', 'broker'],
+      default: 'customer',
     },
     isVerified: {
       type: Boolean,
       required: true,
       default: false,
     },
-    // --- Added for Password Reset Functionality ---
     passwordResetToken: String,
     passwordResetExpires: Date,
+    
+    // ✅ ADDED: Field to store the broker's unique referral code
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows multiple documents to have a null value
+    },
+
+    // ✅ ADDED: Field to store the ID of the referring user
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
   },
   {
     timestamps: true,
@@ -44,10 +57,11 @@ const userSchema = mongoose.Schema(
 // --- Middleware to hash password before saving ---
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // --- Method to compare entered password with hashed password ---

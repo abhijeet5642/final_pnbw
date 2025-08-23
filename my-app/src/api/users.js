@@ -1,30 +1,34 @@
-import api from './axiosConfig';
+import apiClient from './apiClient';
 
-/**
- * Fetch all users (Admin only)
- * @returns {Promise<Array>} A list of user objects
- */
-export async function getUsers() {
-  try {
-    const { data } = await api.get('/users');
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch users:', error);
-    throw error;
+// Public functions
+export const login = async (email, password) => {
+  const { data } = await apiClient.post('/users/login', { email, password });
+  if (data.token) {
+    localStorage.setItem('userInfo', JSON.stringify(data));
   }
-}
+  return data;
+};
 
-/**
- * Delete a user by their ID (Admin only)
- * @param {string} userId The ID of the user to delete
- * @returns {Promise<Object>} Success message
- */
-export async function deleteUser(userId) {
-  try {
-    const { data } = await api.delete(`/users/${userId}`);
-    return data;
-  } catch (error) {
-    console.error(`Failed to delete user ${userId}:`, error);
-    throw error;
+export const register = async (userData) => {
+  const { data } = await apiClient.post('/users', userData);
+   if (data.token) {
+    localStorage.setItem('userInfo', JSON.stringify(data));
   }
-}
+  return data;
+};
+
+// Admin functions
+export const getUsers = async () => {
+  const { data } = await apiClient.get('/users');
+  return data;
+};
+
+export const createBroker = async (brokerData) => {
+  const { data } = await apiClient.post('/users/broker', brokerData);
+  return data;
+};
+
+export const deleteUser = async (userId) => {
+  const { data } = await apiClient.delete(`/users/${userId}`);
+  return data;
+};

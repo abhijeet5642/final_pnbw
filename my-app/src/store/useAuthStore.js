@@ -1,90 +1,86 @@
 // src/store/useAuthStore.js
 
 import { create } from 'zustand';
-import axios from 'axios'; // Assuming axios for API calls
-import * as authAPI from '../api/auth.js'; // Keep your existing authAPI imports
+import axios from 'axios';
+import * as authAPI from '../api/auth.js';
 
-const BACKEND_URL = 'http://localhost:5000'; // Ensure your backend URL is defined or imported
+const BACKEND_URL = 'http://localhost:5000';
+
+// Helper function to get user info from localStorage
+const getStoredUserInfo = () => {
+  try {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? JSON.parse(userInfo) : null;
+  } catch (e) {
+    console.error("Failed to parse user info from localStorage", e);
+    return null;
+  }
+};
 
 export const useAuthStore = create((set) => ({
-  user: null,
-  isLoading: true,
+  // Initialize state by trying to load from localStorage
+  user: getStoredUserInfo()?.user || null,
+  token: getStoredUserInfo()?.token || null,
+  isLoading: false,
   error: null,
   loading: false,
-  token: null,
-  isAuthenticated: false,
-  isAdmin: false,
+  isAuthenticated: !!getStoredUserInfo(),
+  isAdmin: getStoredUserInfo()?.user?.role === 'admin',
+  isBroker: getStoredUserInfo()?.user?.role === 'broker',
 
   init: () => {
-    try {
-      const user = authAPI.getCurrentUser();
-      const token = localStorage.getItem('token');
-      set({ 
-        user, 
-        isLoading: false,
-        token: token || null,
-        isAuthenticated: !!user && !!token,
-        isAdmin: user?.role === 'admin' 
-      });
-    } catch (e) {
-      console.error("Failed to initialize auth store", e);
-      set({ user: null, isLoading: false, token: null, isAuthenticated: false, isAdmin: false });
-    }
+    console.log("Auth store initialized. User from storage:", getStoredUserInfo());
   },
 
   login: async (creds) => {
     set({ loading: true, error: null });
     try {
       const loginResponse = await authAPI.login(creds);
-      const { user, token } = loginResponse; 
+      const { token, ...userData } = loginResponse;
 
-      localStorage.setItem('token', token);
-      set({ 
-        user, 
+      const userInfoToStore = { user: userData, token: token };
+      localStorage.setItem('userInfo', JSON.stringify(userInfoToStore));
+      console.log('User info saved to localStorage:', userInfoToStore);
+
+      set({
+        user: userData,
         token,
-        isAuthenticated: true, 
-        isAdmin: user?.role === 'admin', 
-        loading: false, 
-        error: null 
+        isAuthenticated: true,
+        isAdmin: userData?.role === 'admin',
+        isBroker: userData?.role === 'broker',
+        loading: false,
+        error: null
       });
-      return user;
+      return userData;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
       set({ error: errorMessage, loading: false });
       throw err;
     }
   },
-  
-  // --- Modified 'register' to only return message and not expect user/token immediately ---
+
   register: async (userData) => {
     set({ loading: true, error: null });
     try {
       const response = await axios.post(`${BACKEND_URL}/api/auth/register`, userData);
-      // Backend currently returns { message: "Registration successful..." }
-      // So, we only expect a message here. No user or token to destructure yet.
-      
-      set({ 
+      set({
         loading: false,
         error: null
       });
-      // Return the message from the backend, or a generic success indicator
-      return response.data.message || 'Registration successful. Please check your email for an OTP.'; 
+      return response.data.message || 'Registration successful. Please check your email for an OTP.';
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
       set({ error: errorMessage, loading: false });
-      throw err; 
+      throw err;
     }
   },
 
-  // --- New: verifyOtp function for the store ---
   verifyOtp: async (email, otp) => {
     set({ loading: true, error: null });
     try {
       const response = await axios.post(`${BACKEND_URL}/api/auth/verify-otp`, { email, otp });
-      // After successful OTP verification, the user is verified.
-      // Now, the user should perform a login to get their token and user data.
       set({ loading: false, error: null });
-      return response.data.message; // Return success message
+      return response.data.message;
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'OTP verification failed.';
       set({ error: errorMessage, loading: false });
@@ -93,7 +89,7 @@ export const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    authAPI.logout();
-    set({ user: null, token: null, isAuthenticated: false, isAdmin: false });
+    localStorage.removeItem('userInfo');
+    set({ user: null, token: null, isAuthenticated: false, isAdmin: false, isBroker: false });
   },
 }));

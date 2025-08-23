@@ -20,8 +20,9 @@ import Dashboard from './pages/Admin/Dashboard.jsx';
 import UserManagement from './pages/Admin/UserManagement.jsx';
 import PropertyManagement from './pages/Admin/PropertyManagement.jsx';
 import AdminRoute from './components/AdminRoute.jsx';
-// 1. Import the new EnquiryManagement component
 import EnquiryManagement from './pages/Admin/EnquiryManagement.jsx';
+import BrokerDashboard from './pages/BrokerDashboard.jsx';
+import BrokerRoute from './components/BrokerRoute.jsx'; // ✅ Import BrokerRoute
 
 // --- Style Imports ---
 import './styles/styles.css';
@@ -29,8 +30,6 @@ import './index.css';
 
 export default function App() {
   
-  // This useEffect hook runs only once when the app starts.
-  // It initializes the auth store to load user data from localStorage.
   useEffect(() => {
     useAuthStore.getState().init();
   }, []);
@@ -53,13 +52,17 @@ export default function App() {
           <Route path="verify-otp" element={<VerifyOtp />} />
         </Route>
 
+        {/* ✅ ADDED: Protected Broker Dashboard route */}
+        <Route element={<BrokerRoute />}>
+            <Route path="/broker" element={<BrokerDashboard />} />
+        </Route>
+
         {/* Admin routes that are protected and use a separate admin layout */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="properties" element={<PropertyManagement />} />
-            {/* 2. Add the new route for the enquiries page */}
             <Route path="enquiries" element={<EnquiryManagement />} />
           </Route>
         </Route>

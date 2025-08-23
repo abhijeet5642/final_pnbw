@@ -18,12 +18,16 @@ export default function Header() {
     { to: '/contact', label: 'Contact' },
   ];
 
-  // --- THIS IS THE FIX ---
-  // The link now correctly points to "/admin"
+  // --- UPDATED LOGIC ---
+  // The link now correctly points to the appropriate dashboard
   if (user && user.role === 'admin') {
     const adminLink = { to: '/admin', label: 'Admin Dashboard' };
     navLinks.splice(1, 0, adminLink);
+  } else if (user && user.role === 'broker') {
+    const brokerLink = { to: '/broker', label: 'Broker Dashboard' };
+    navLinks.splice(1, 0, brokerLink);
   }
+  // --- END OF UPDATED LOGIC ---
 
   const btnBase =
     'px-6 py-2.5 text-lg rounded-full font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 shadow-md backdrop-blur-sm';

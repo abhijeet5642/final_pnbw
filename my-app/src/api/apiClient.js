@@ -2,30 +2,32 @@ import axios from 'axios';
 
 // Create a central Axios instance
 const apiClient = axios.create({
-  // Make sure this URL points to your backend server
   baseURL: 'http://localhost:5000/api', 
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// --- IMPORTANT: Request Interceptor ---
-// This function runs before every single request is sent.
-// It retrieves the user's token from your authentication store (or localStorage)
-// and adds it to the 'Authorization' header.
+// IMPORTANT: This interceptor will attach the token from localStorage
 apiClient.interceptors.request.use(
   (config) => {
-     console.log('Axios interceptor is running...');
-    // --- Replace this with your actual token management logic ---
-    // Example: const token = useAuthStore.getState().token;
-    const userInfo = localStorage.getItem('userInfo'); // Assuming you store user info here
-     console.log('Retrieved from localStorage:', userInfo);
-    if (userInfo) {
-      const token = JSON.parse(userInfo).token;
-       console.log('Token being attached:', token);
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    // -----------------------------------------------------------
+    // We will retrieve the token from localStorage here
+    const userInfo = localStorage.getItem('userInfo');
 
+    if (userInfo) {
+      try {
+        const { token } = JSON.parse(userInfo);
+        if (token) {
+          console.log("Axios Interceptor: Attaching token to request.");
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
+      } catch (e) {
+        console.error("Failed to parse userInfo from localStorage.", e);
+        localStorage.removeItem('userInfo');
+      }
+    } else {
+      console.log("Axios Interceptor: No userInfo found, not attaching token.");
+    }
     return config;
   },
   (error) => {
