@@ -2,10 +2,12 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import Property from '../models/Property.js';
+import Review from '../models/Review.js';
+import { protect } from '../middleware/auth.js'; // Assuming this is the correct path
 
 const router = express.Router();
 
-// --- MULTER CONFIGURATION (No changes) ---
+// --- MULTER CONFIGURATION ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => {
@@ -15,7 +17,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- ROUTES ---
+// --- EXISTING PROPERTY ROUTES ---
 
 // GET all properties
 router.get('/', async (req, res) => {
@@ -30,7 +32,6 @@ router.get('/', async (req, res) => {
 
 // POST a new property
 router.post('/', upload.array('images', 10), async (req, res) => {
-    // ... (Your existing POST logic remains here, no changes needed)
     try {
         const { title, description, propertyType, price, units, bedrooms, bathrooms, furnishing, possession, builtYear, locality, city, lat, lng, amenities, videoUrls, submittedBy } = req.body;
         const rawImagePaths = req.files.map(file => file.path);
@@ -62,18 +63,77 @@ router.post('/', upload.array('images', 10), async (req, res) => {
     }
 });
 
-// ✅ NEW ROUTE: GET a single property by ID
+// GET a single property by ID
 router.get('/:id', async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
-    
     if (!property) {
       return res.status(404).json({ message: 'Property not found' });
     }
-    
     res.status(200).json(property);
   } catch (error) {
     console.error('Error fetching single property:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// --- ROUTES FOR REVIEWS ---
+
+// @desc    Get reviews for a property
+// @route   GET /api/properties/:id/reviews
+// @access  Public
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find({ property: req.params.id }).populate('user', 'name');
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Create a new review
+// @route   POST /api/properties/:id/reviews
+// @access  Private (requires login)
+router.post('/:id/reviews', protect, async (req, res) => {
+  const { rating, comment } = req.body;
+
+  try {
+    const property = await Property.findById(req.params.id);
+
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    const alreadyReviewed = await Review.findOne({ 
+      property: req.params.id, 
+      user: req.user._id 
+    });
+
+    if (alreadyReviewed) {
+      return res.status(400).json({ message: 'Property already reviewed' });
+    }
+
+    const review = new Review({
+      rating: Number(rating),
+      comment,
+      user: req.user._id,
+      property: req.params.id,
+    });
+
+    await review.save();
+
+    const reviews = await Review.find({ property: req.params.id });
+    property.numReviews = reviews.length;
+    property.rating = reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
+    
+    await property.save();
+
+    res.status(201).json({ message: 'Review added' });
+
+  } catch (error) {
+    console.error('Error creating review:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

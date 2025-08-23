@@ -12,12 +12,10 @@ export const getPropertyById = async (id) => {
   return data;
 };
 
-// --- UPDATED FUNCTION ---
 // Create a new property
 export const createProperty = async (formData) => {
   // When you send a FormData object with Axios, it automatically sets
   // the correct 'Content-Type: multipart/form-data' header with the boundary.
-  // Manually setting the header here would break the file upload.
   const { data } = await apiClient.post('/properties', formData);
   return data;
 };
@@ -31,5 +29,28 @@ export const deleteProperty = async (id) => {
 // (Optional) Update a property
 export const updateProperty = async (id, propertyData) => {
   const { data } = await apiClient.put(`/properties/${id}`, propertyData);
+  return data;
+};
+
+// --- FUNCTIONS FOR REVIEWS (NEWLY ADDED) ---
+
+/**
+ * Get all reviews for a specific property.
+ * @param {string} propertyId The ID of the property.
+ * @returns {Promise<Array>} A promise that resolves to an array of reviews.
+ */
+export const getReviewsForProperty = async (propertyId) => {
+  const { data } = await apiClient.get(`/properties/${propertyId}/reviews`);
+  return data;
+};
+
+/**
+ * Create a new review for a property.
+ * @param {string} propertyId The ID of the property to review.
+ * @param {object} reviewData The review data (e.g., { rating, comment }).
+ * @returns {Promise<object>} A promise that resolves to the server's response.
+ */
+export const createReview = async (propertyId, reviewData) => {
+  const { data } = await apiClient.post(`/properties/${propertyId}/reviews`, reviewData);
   return data;
 };

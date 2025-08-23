@@ -5,30 +5,42 @@ const propertySchema = mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String, required: true },
     propertyType: { type: String, required: true },
-    price: { type: String, required: true }, // <-- CHANGED from Number to String
-    area: { type: Number, required: true }, // Mapped from 'units' on the frontend
+    price: { type: String, required: true },
+    area: { type: Number, required: true },
     bedrooms: { type: Number, default: 0 },
     bathrooms: { type: Number, default: 0 },
     furnishing: { type: String, default: 'Unfurnished' },
     possession: { type: String, default: 'Immediate' },
     builtYear: { type: Number },
-    location: { type: String, required: true }, // Combined string for display
+    location: { type: String, required: true },
     locality: { type: String, required: true },
     city: { type: String, required: true },
-    images: [{ type: String }], // Array of image URLs
+    images: [{ type: String }],
     videoUrls: [{ type: String }],
     amenities: [{ type: String }],
     locationCoords: {
       lat: { type: Number },
       lng: { type: Number },
     },
-    // Reference to the admin/agent who listed the property
     agent: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'User',
     },
-    submittedBy: { type: String }, // Name of the broker if provided
+    submittedBy: { type: String },
+
+    // --- ADDED FOR REVIEW SYSTEM ---
+    rating: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    numReviews: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    // --- END OF ADDED FIELDS ---
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
