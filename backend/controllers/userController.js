@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Property from '../models/Property.js';
-//import { generatePassword } from '../utils/generatePassword.js'; // Assuming a new utility for this
+// ✅ Removed the commented-out import and the non-code block
 
 // Helper function to generate JWT
 const generateToken = (id) => {
@@ -131,6 +131,7 @@ const createBroker = asyncHandler(async (req, res) => {
     user.role = 'broker';
     user.fullName = fullName || user.fullName;
     user.phoneNumber = phoneNumber || user.phoneNumber;
+    user.isVerified = true; // ✅ ADDED: Set to true on update
     await user.save();
 
     res.status(200).json({
@@ -141,17 +142,14 @@ const createBroker = asyncHandler(async (req, res) => {
       role: user.role,
     });
   } else {
-   // Change this line:
-// const password = generatePassword();
-
-// To this:
-const password = Math.random().toString(36).slice(-10);
+    const password = Math.random().toString(36).slice(-10); // ✅ FIXED: Password generation logic
     user = await User.create({
       fullName,
       email,
       password,
       phoneNumber,
       role: 'broker',
+      isVerified: true, // ✅ ADDED: Set to true on creation
       referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
     });
 

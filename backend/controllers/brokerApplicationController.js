@@ -26,29 +26,7 @@ const submitApplication = asyncHandler(async (req, res) => {
 // @route   GET /api/broker-applications
 // @access  Private/Admin
 const getApplications = asyncHandler(async (req, res) => {
-  console.log('GET /api/broker-applications was hit.'); // <-- Log 1
-  
-  // The 'protect' middleware should have already set req.user
-  if (!req.user) {
-    console.log('Middleware Error: No user object. Request unauthorized.'); // <-- Log 2
-    res.status(401);
-    throw new Error('Not authorized, user not found');
-  }
-
-  // The 'admin' middleware should have verified the user's role
-  if (req.user.role !== 'admin') {
-    console.log('Middleware Error: User is not an admin.'); // <-- Log 3
-    res.status(403);
-    throw new Error('Not authorized as an admin');
-  }
-  
-  console.log('User is an admin. Proceeding to fetch data...'); // <-- Log 4
-
   const applications = await BrokerApplication.find({ status: 'pending' });
-
-  console.log('Database query successful. Found:', applications.length, 'applications.'); // <-- Log 5
-  console.log('Applications data:', applications); // <-- Log 6
-
   res.json(applications);
 });
 
@@ -64,10 +42,14 @@ const approveApplication = asyncHandler(async (req, res) => {
   }
 
   let referredBy = null;
+  // Check if a referral code was used
   if (application.referralCodeUsed) {
     const referringUser = await User.findOne({ referralCode: application.referralCodeUsed });
     if (referringUser) {
       referredBy = referringUser._id;
+      // Increment the referring broker's referral count
+      referringUser.referrals = (referringUser.referrals || 0) + 1;
+      await referringUser.save();
     }
   }
 
@@ -80,14 +62,18 @@ const approveApplication = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error('User is already an admin or broker. Cannot change role.');
     }
-
+    
     user.role = 'broker';
     user.referredBy = referredBy; 
+    user.isVerified = true; // ✅ FIXED: Set to true on update
     await user.save();
     
     application.status = 'approved';
     await application.save();
-    
+
+    // Delete the application from the database
+    await application.deleteOne();
+
     res.status(200).json({ message: 'Existing user role updated to broker.' });
   } else {
     user = await User.create({
@@ -96,12 +82,17 @@ const approveApplication = asyncHandler(async (req, res) => {
       phoneNumber: application.phone,
       password: `password_${Date.now()}`,
       role: 'broker',
+      isVerified: true, // ✅ FIXED: Set to true on creation
       referredBy: referredBy,
       referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      referrals: 0 // Initialize referrals to 0 for a new user
     });
 
     application.status = 'approved';
     await application.save();
+
+    // Delete the application from the database
+    await application.deleteOne();
     
     res.status(201).json({ message: 'New broker approved and user account created.', user });
   }
@@ -121,4 +112,5 @@ const rejectApplication = asyncHandler(async (req, res) => {
   }
 });
 
+// ✅ MOVED: Export statement is now at the end, after all function definitions
 export { submitApplication, getApplications, approveApplication, rejectApplication };

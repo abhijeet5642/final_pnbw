@@ -24,7 +24,7 @@ export default function Header() {
     const adminLink = { to: '/admin', label: 'Admin Dashboard' };
     navLinks.splice(1, 0, adminLink);
   } else if (user && user.role === 'broker') {
-    const brokerLink = { to: '/broker', label: 'Broker Dashboard' };
+    const brokerLink = { to: '/broker', label: 'Agent Dashboard' };
     navLinks.splice(1, 0, brokerLink);
   }
   // --- END OF UPDATED LOGIC ---

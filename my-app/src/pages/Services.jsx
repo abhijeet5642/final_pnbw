@@ -85,7 +85,7 @@ export default function Services() {
             </div>
             <div className="space-y-4">
               <p className="text-gray-800 leading-relaxed text-lg">
-                PNBW Officials proudly operates in **18 key locations** across the country, ensuring comprehensive coverage and local expertise wherever you are.
+                PixieNest BuildWell proudly operates in **18 key locations** across the country, ensuring comprehensive coverage and local expertise wherever you are.
               </p>
               <p className="text-gray-800 leading-relaxed text-lg">
                 Our operations extend significantly across **Delhi NCR** and also cater to clients in various regions **outside NCR**, bringing our trusted services closer to you.

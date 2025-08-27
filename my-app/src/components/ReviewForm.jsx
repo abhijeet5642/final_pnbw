@@ -1,6 +1,6 @@
 // File: frontend/src/components/ReviewForm.jsx
 import React, { useState } from 'react';
-import { createReview } from '../api/properties'; // API function to submit the review
+import { addReviewForProperty } from '../api/properties'; // API function to submit the review
 import StarRatingInput from './StarRatingInput'; // Import the separate star input component
 
 const ReviewForm = ({ propertyId, onReviewSubmitted }) => {
@@ -22,8 +22,8 @@ const ReviewForm = ({ propertyId, onReviewSubmitted }) => {
     setLoading(true);
     setError('');
     try {
-      // Call the API function to create the review
-      await createReview(propertyId, { rating, comment });
+      // --- ✅ FIX: Changed createReview to the imported function addReviewForProperty ---
+      await addReviewForProperty(propertyId, { rating, comment });
       
       // Notify the parent component that a new review was submitted so it can refresh the list
       onReviewSubmitted(); 
@@ -32,6 +32,8 @@ const ReviewForm = ({ propertyId, onReviewSubmitted }) => {
       setRating(0);
       setComment('');
     } catch (err) {
+      // --- ✨ IMPROVEMENT: Log the actual error to the console for easier debugging ---
+      console.error("Failed to submit review:", err); 
       setError(err.response?.data?.message || 'Failed to submit review. You may have already reviewed this property.');
     } finally {
       setLoading(false);

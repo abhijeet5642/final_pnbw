@@ -1,8 +1,7 @@
 // File: frontend/src/pages/Contact.jsx
 
 import React, { useState } from 'react';
-import { PhoneCall, Mail, MapPin, Clock, Send, UserPlus } from 'lucide-react';
-// Assuming you have these API functions in separate files
+import { PhoneCall, Mail, MapPin, Send, UserPlus, Tag } from 'lucide-react'; // Added Tag icon
 import { sendContactMessage } from '../api/contact'; 
 import { submitBrokerApplication } from '../api/brokerApplications';
 
@@ -10,7 +9,8 @@ export default function Contact() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [contactFormStatus, setContactFormStatus] = useState(''); // 'success', 'error', 'sending', ''
 
-  const [brokerForm, setBrokerForm] = useState({ fullName: '', dob: '', phone: '', email: '', experience: '', locations: '', brokerMessage: '' });
+  // ✅ UPDATED: Added a new field for the referral code
+  const [brokerForm, setBrokerForm] = useState({ fullName: '', dob: '', phone: '', email: '', experience: '', locations: '', brokerMessage: '', referralCodeUsed: '' });
   const [brokerFormStatus, setBrokerFormStatus] = useState(''); // 'success', 'error', 'sending', ''
 
   const handleContactFormChange = (e) => {
@@ -31,6 +31,7 @@ export default function Contact() {
   };
 
   const handleBrokerFormChange = (e) => {
+    // Correctly handles both the old fields and the new referral code field
     setBrokerForm((prev) => ({ ...prev, [e.target.id.replace('broker-', '')]: e.target.value }));
   };
 
@@ -40,7 +41,8 @@ export default function Contact() {
     try {
       await submitBrokerApplication(brokerForm);
       setBrokerFormStatus('success');
-      setBrokerForm({ fullName: '', dob: '', phone: '', email: '', experience: '', locations: '', brokerMessage: '' }); // Clear form
+      // ✅ UPDATED: Clears the new field after successful submission
+      setBrokerForm({ fullName: '', dob: '', phone: '', email: '', experience: '', locations: '', brokerMessage: '', referralCodeUsed: '' });
     } catch (error) {
       setBrokerFormStatus('error');
       console.error('Error submitting broker form:', error);
@@ -71,13 +73,16 @@ export default function Contact() {
             <div className="flex flex-col items-center text-center p-6 bg-blue-50 rounded-xl shadow-md">
               <Mail size={48} strokeWidth={1.5} className="text-blue-600 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Email Us</h3>
-              <p className="text-gray-700">info@pnbwofficials.com</p>
-              <p className="text-gray-700">support@pnbwofficials.com</p>
+              <p className="text-gray-700">pixienestbuildwell35@gmail.com</p>
+              <p className="text-gray-700">pixienestbuildwellpvtltd@gmail.com</p>
             </div>
             <div className="flex flex-col items-center text-center p-6 bg-blue-50 rounded-xl shadow-md">
               <MapPin size={48} strokeWidth={1.5} className="text-blue-600 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Our Office</h3>
-              <p className="text-gray-700">Sector 62, Noida, Uttar Pradesh, India</p>
+              <p className="text-gray-700">2nd Floor, SBI Grahak Seva Kendra Building
+                                          Major Mohit Sharma Marg, near Sahni Tower
+                                          Rajendra Nagar, Sector 5
+                                          Sahibabad, Ghaziabad, Uttar Pradesh - 201005</p>
             </div>
           </div>
         </section>
@@ -107,7 +112,7 @@ export default function Contact() {
                 className="inline-flex items-center justify-center px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 disabled={contactFormStatus === 'sending'}
               >
-                {contactFormStatus === 'sending' ? 'Sending...' : <><Send size={20} className="mr-2" /> Send Message</>}{contactFormStatus === 'sending' ? 'Sending...' : <><Send size={20} className="mr-2" /> Send Message</>}
+                {contactFormStatus === 'sending' ? 'Sending...' : <><Send size={20} className="mr-2" /> Send Message</>}
               </button>
             </div>
             {contactFormStatus === 'success' && <p className="text-center text-green-600 mt-4 font-semibold">Message sent successfully!</p>}
@@ -117,37 +122,52 @@ export default function Contact() {
 
         <section className="bg-white p-8 sm:p-10 rounded-2xl shadow-xl border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-green-500 pb-4 mb-8 inline-block">Join Our Broker Network</h2>
-           <p className="text-gray-800 leading-relaxed text-lg max-w-3xl mx-auto mb-8">
+          <p className="text-gray-800 leading-relaxed text-lg max-w-3xl mx-auto mb-8">
             Are you a passionate and professional real estate broker looking to expand your reach and grow with a trusted partner? Join PNBW Officials' esteemed network!
           </p>
           <form className="space-y-6 max-w-2xl mx-auto" onSubmit={handleBrokerFormSubmit}>
             <div>
               <label htmlFor="broker-fullName" className="block text-gray-700 text-lg font-semibold mb-2">Full Name</label>
-              <input type="text" id="broker-fullName" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your full name" value={brokerForm.fullName} onChange={handleBrokerFormChange} required />
+              <input type="text" id="broker-fullName" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="Enter your full name" value={brokerForm.fullName} onChange={handleBrokerFormChange} required />
             </div>
             <div>
               <label htmlFor="broker-dob" className="block text-gray-700 text-lg font-semibold mb-2">Date of Birth</label>
-              <input type="date" id="broker-dob" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={brokerForm.dob} onChange={handleBrokerFormChange} required />
+              <input type="date" id="broker-dob" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" value={brokerForm.dob} onChange={handleBrokerFormChange} required />
             </div>
             <div>
               <label htmlFor="broker-phone" className="block text-gray-700 text-lg font-semibold mb-2">Contact Number</label>
-              <input type="tel" id="broker-phone" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., +91 9876543210" value={brokerForm.phone} onChange={handleBrokerFormChange} required />
+              <input type="tel" id="broker-phone" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="e.g., +91 9876543210" value={brokerForm.phone} onChange={handleBrokerFormChange} required />
             </div>
             <div>
               <label htmlFor="broker-email" className="block text-gray-700 text-lg font-semibold mb-2">Email Address</label>
-              <input type="email" id="broker-email" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="your.broker.email@example.com" value={brokerForm.email} onChange={handleBrokerFormChange} required />
+              <input type="email" id="broker-email" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="your.broker.email@example.com" value={brokerForm.email} onChange={handleBrokerFormChange} required />
             </div>
             <div>
               <label htmlFor="broker-experience" className="block text-gray-700 text-lg font-semibold mb-2">Years of Experience in Real Estate</label>
-              <input type="number" id="broker-experience" min="0" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 5" value={brokerForm.experience} onChange={handleBrokerFormChange} />
+              <input type="number" id="broker-experience" min="0" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="e.g., 5" value={brokerForm.experience} onChange={handleBrokerFormChange} />
             </div>
             <div>
               <label htmlFor="broker-locations" className="block text-gray-700 text-lg font-semibold mb-2">Preferred Operating Locations</label>
-              <textarea id="broker-locations" rows="3" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="List cities or regions where you primarily operate" value={brokerForm.locations} onChange={handleBrokerFormChange}></textarea>
+              <textarea id="broker-locations" rows="3" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="List cities or regions where you primarily operate" value={brokerForm.locations} onChange={handleBrokerFormChange}></textarea>
+            </div>
+            {/* ✅ NEW REFERRAL CODE INPUT FIELD */}
+            <div>
+              <label htmlFor="broker-referralCodeUsed" className="block text-gray-700 text-lg font-semibold mb-2">Referral Code (Optional)</label>
+              <div className="relative">
+                <Tag size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  id="broker-referralCodeUsed"
+                  className="w-full p-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 text-gray-900"
+                  placeholder="Enter a referral code if you have one"
+                  value={brokerForm.referralCodeUsed}
+                  onChange={handleBrokerFormChange}
+                />
+              </div>
             </div>
             <div>
               <label htmlFor="broker-message" className="block text-gray-700 text-lg font-semibold mb-2">Brief Message (Optional)</label>
-              <textarea id="broker-message" rows="3" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tell us a bit about yourself or your specialization" value={brokerForm.brokerMessage} onChange={handleBrokerFormChange}></textarea>
+              <textarea id="broker-message" rows="3" className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" placeholder="Tell us a bit about yourself or your specialization" value={brokerForm.brokerMessage} onChange={handleBrokerFormChange}></textarea>
             </div>
             <div className="text-center">
                 <button
@@ -163,12 +183,21 @@ export default function Contact() {
           </form>
         </section>
 
+        {/* ... Map section */}
         <section className="bg-white p-8 sm:p-10 rounded-2xl shadow-xl border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-8 inline-block">Find Us on the Map</h2>
-          <div className="w-full h-96 bg-gray-200 rounded-xl flex items-center justify-center text-gray-600">
-            Map Placeholder
+          <div className="w-full h-96 bg-gray-200 rounded-xl overflow-hidden">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3500.3510993447157!2d77.3567899761921!3d28.67914218196133!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfbf26ab05e39%3A0x50df6e2cf4c4b8dc!2sPixieNest%20Buildwell%20Pvt%20Ltd!5e0!3m2!1sen!2sin!4v1756010262316!5m2!1sen!2sin" 
+              className="w-full h-full border-0"
+              allowFullScreen="" 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Our Office Location"
+            ></iframe>
           </div>
         </section>
+        
       </div>
     </main>
   );

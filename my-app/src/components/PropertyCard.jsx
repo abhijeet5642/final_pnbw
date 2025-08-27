@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiChevronRight, FiMapPin, FiTag, FiSquare, FiHome, FiZap, FiChevronLeft } from 'react-icons/fi'; // Import FiChevronLeft
+import { FiChevronRight, FiMapPin, FiTag, FiSquare, FiHome, FiZap, FiChevronLeft } from 'react-icons/fi';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -8,8 +8,6 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
 
-// BEST PRACTICE: Use an environment variable instead of a hardcoded URL.
-// In your frontend's .env file: VITE_BACKEND_URL=http://localhost:5000
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export default function PropertyCard({ property }) {
@@ -36,7 +34,7 @@ export default function PropertyCard({ property }) {
           <Swiper
             modules={[Navigation, Pagination, Autoplay]}
             loop
-            navigation={{ // These classes target the divs below
+            navigation={{
               nextEl: `.swiper-button-next-${_id}`,
               prevEl: `.swiper-button-prev-${_id}`,
             }}
@@ -47,15 +45,15 @@ export default function PropertyCard({ property }) {
             {images.map((imgFilename, index) => (
               <SwiperSlide key={`${_id}-${index}`}>
                 <img
-                  // --- NECESSARY FIX: Removed the extra '/uploads' from the path ---
-                  src={`${BACKEND_URL}/${imgFilename}`}
+                  // --- ✅ THIS IS THE FIX ---
+                  // Use imgFilename directly as it's already a full URL
+                  src={imgFilename}
                   alt={`${title} - ${index + 1}`}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/600x400/e2e8f0/4a5568?text=Image+Error'; }}
                 />
               </SwiperSlide>
             ))}
-            {/* --- UI FIX: Added icons inside the navigation buttons --- */}
             <div className={`swiper-button-prev swiper-button-prev-${_id} absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}>
                 <FiChevronLeft size={20} />
             </div>
@@ -78,7 +76,7 @@ export default function PropertyCard({ property }) {
           <FiMapPin className="mr-1 text-blue-500" /> {locality}, {city}
         </p>
         <p className="text-md text-gray-700 flex items-center font-semibold">
-          <FiTag className="mr-1 text-green-500" /> ₹ {price || 'N/A'}
+          <FiTag className="mr-1 text-green-500" /> {price || 'N/A'}
         </p>
         {propertyType && (
           <p className="text-sm text-gray-600 flex items-center">

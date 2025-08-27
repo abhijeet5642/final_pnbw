@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPropertyById, getReviewsForProperty, createReview } from '../api/properties.js';
+import { getPropertyById, getReviewsForProperty } from '../api/properties.js';
 import { createEnquiry } from '../api/enquiries.js';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -16,6 +16,7 @@ import { FaRupeeSign } from 'react-icons/fa';
 import StarRating from '../components/StarRating.jsx';
 import ReviewForm from '../components/ReviewForm.jsx';
 
+// This is no longer needed for images, but might be used by other API calls.
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export default function PropertyDetail() {
@@ -49,7 +50,6 @@ export default function PropertyDetail() {
   }, [id]);
 
   const handleReviewSubmitted = () => {
-    // Refetch reviews and property data after a new review is submitted
     fetchPropertyAndReviews();
   };
 
@@ -63,8 +63,7 @@ export default function PropertyDetail() {
       setEnquiryState({ loading: false, error: errorMessage, success: false });
     }
   };
-
-  // --- THIS IS THE CORRECTED SECTION ---
+  
   if (loading) return <Loader />;
 
   if (error) return (
@@ -79,8 +78,7 @@ export default function PropertyDetail() {
       <p className="text-gray-600 text-xl">Property not found.</p>
     </main>
   );
-  // --- END OF CORRECTION ---
-
+  
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 py-16 sm:py-20">
       <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 space-y-12">
@@ -105,7 +103,9 @@ export default function PropertyDetail() {
                 {property.images.map((imgFilename, index) => (
                   <SwiperSlide key={index}>
                     <img
-                      src={`${BACKEND_URL}/${imgFilename}`}
+                      // --- ✅ THIS IS THE FIX ---
+                      // Use imgFilename directly, as it's already the full URL from your database
+                      src={imgFilename}
                       alt={`${property.title} - ${index + 1}`}
                       className="w-full h-full object-cover"
                       onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/800x500/e2e8f0/4a5568?text=Image+Error'; }}
@@ -176,7 +176,7 @@ export default function PropertyDetail() {
                     {reviews.map(review => (
                         <div key={review._id} className="border-b pb-4 last:border-b-0">
                             <div className="flex items-center mb-2">
-                                <strong className="mr-4 text-gray-800">{review.user?.name || 'Anonymous'}</strong>
+                                <strong className="mr-4 text-gray-800">{review.user?.fullname || 'Anonymous'}</strong>
                                 <StarRating rating={review.rating} />
                             </div>
                             <p className="text-gray-700">{review.comment}</p>

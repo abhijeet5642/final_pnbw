@@ -1,10 +1,12 @@
+// frontend/src/pages/BrokerDashboard.jsx
+
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { Navigate, Link } from 'react-router-dom';
 import StatsCard from '../components/StatsCard.jsx';
 import Loader from '../components/Loader.jsx';
-import { User, Award, Home, Eye, CheckCircle, XCircle } from 'lucide-react';
-import { getBrokerDashboardData } from '../api/brokers.js'; 
+import { User, Home, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { getBrokerDashboardData } from '../api/brokers.js';
 
 export default function BrokerDashboard() {
   const user = useAuthStore((s) => s.user);
@@ -13,12 +15,13 @@ export default function BrokerDashboard() {
   const [referredBrokers, setReferredBrokers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // redirect if not broker
   if (!user || user.role !== 'broker') {
     return <Navigate to="/login" replace />;
   }
 
   useEffect(() => {
-    if (!user || !user.id) {
+    if (!user || !(user.id || user._id)) {
       setLoading(false);
       return;
     }
@@ -26,10 +29,15 @@ export default function BrokerDashboard() {
     async function loadData() {
       setLoading(true);
       try {
-        const data = await getBrokerDashboardData(user.id);
-        setStats(data.stats);
-        setListings(data.listings);
-        setReferredBrokers(data.referredBrokers);
+        // use id if available, otherwise fallback to _id
+        const brokerId = user.id || user._id;
+        const data = await getBrokerDashboardData(brokerId);
+
+        if (data) {
+          setStats(data.stats);
+          setListings(data.listings);
+          setReferredBrokers(data.referredBrokers);
+        }
       } catch (err) {
         console.error('Error loading broker dashboard data:', err);
         setStats(null);
@@ -45,15 +53,16 @@ export default function BrokerDashboard() {
     return <Loader />;
   }
 
-  // The main check for rendering the dashboard
-  if (!stats || !referredBrokers || !listings) {
+  if (!stats) {
     return (
       <div className="p-8 text-center bg-white rounded-xl shadow-xl border border-gray-100">
-        <p className="text-red-600 text-xl font-semibold">Couldn’t load dashboard data. Please try again.</p>
+        <p className="text-red-600 text-xl font-semibold">
+          Couldn’t load dashboard data. Please try again.
+        </p>
       </div>
     );
   }
-  
+
   const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) return '–';
     const lakhs = Math.round(amount / 100000);
@@ -66,18 +75,20 @@ export default function BrokerDashboard() {
         Agent <span className="text-blue-600">Dashboard</span>
       </h1>
 
-      {/* Top-line stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <StatsCard label="Referral Code" value={stats.referralCode ?? '–'} />
-        <StatsCard label="Total Referrals" value={referredBrokers.length ?? 0} />
+        <StatsCard label="Total Referrals" value={referredBrokers?.length ?? 0} />
         <StatsCard label="Active Listings" value={stats.activeListings ?? '–'} />
         <StatsCard label="Profit Earned" value={formatCurrency(stats.profit)} />
       </div>
 
-      {/* Referral Network table */}
+      {/* Referral Brokers */}
       <div className="bg-white p-6 rounded-xl shadow-xl border border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900 border-b-4 border-emerald-500 pb-4 mb-6 inline-block">Your Referral Network</h2>
-        {referredBrokers.length > 0 ? (
+        <h2 className="text-2xl font-bold text-gray-900 border-b-4 border-emerald-500 pb-4 mb-6 inline-block">
+          Your Referral Network
+        </h2>
+        {referredBrokers && referredBrokers.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
               <thead className="bg-emerald-50 text-emerald-800 text-sm uppercase tracking-wider">
@@ -88,7 +99,10 @@ export default function BrokerDashboard() {
               </thead>
               <tbody>
                 {referredBrokers.map((broker) => (
-                  <tr key={broker._id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                  <tr
+                    key={broker.id || broker._id}
+                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150"
+                  >
                     <td className="px-4 py-3 font-semibold text-lg text-gray-900 flex items-center gap-2">
                       <User size={18} className="text-gray-500" /> {broker.fullName}
                     </td>
@@ -99,15 +113,18 @@ export default function BrokerDashboard() {
             </table>
           </div>
         ) : (
-          <p className="p-6 text-center text-gray-500 text-lg">You have not referred any brokers yet.</p>
+          <p className="p-6 text-center text-gray-500 text-lg">
+            You have not referred any brokers yet.
+          </p>
         )}
       </div>
 
-
-      {/* Listings table */}
+      {/* Listings */}
       <div className="bg-white p-6 rounded-xl shadow-xl border border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-6 inline-block">Your Listings</h2>
-        {listings.length > 0 ? (
+        <h2 className="text-2xl font-bold text-gray-900 border-b-4 border-blue-500 pb-4 mb-6 inline-block">
+          Your Listings
+        </h2>
+        {listings && listings.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
               <thead className="bg-blue-50 text-blue-800 text-sm uppercase tracking-wider">
@@ -121,7 +138,10 @@ export default function BrokerDashboard() {
               </thead>
               <tbody>
                 {listings.map((p) => (
-                  <tr key={p.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                  <tr
+                    key={p.id || p._id}
+                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150"
+                  >
                     <td className="px-4 py-3 font-semibold text-lg text-gray-900 flex items-center gap-2">
                       <Home size={18} className="text-gray-500" /> {p.title}
                     </td>
@@ -134,7 +154,11 @@ export default function BrokerDashboard() {
                             : 'bg-amber-100 text-amber-700'
                         }`}
                       >
-                        {p.status === 'published' ? <CheckCircle size={14} className="mr-1" /> : <XCircle size={14} className="mr-1" />}
+                        {p.status === 'published' ? (
+                          <CheckCircle size={14} className="mr-1" />
+                        ) : (
+                          <XCircle size={14} className="mr-1" />
+                        )}
                         {p.status}
                       </span>
                     </td>
@@ -144,7 +168,7 @@ export default function BrokerDashboard() {
                     <td className="px-4 py-3 text-center">
                       <div className="flex justify-center gap-2">
                         <Link
-                          to={`/properties/${p.id}`}
+                          to={`/properties/${p.id || p._id}`}
                           className="p-2 rounded-full text-blue-600 hover:bg-blue-100 transition-colors"
                           title="View Property"
                         >
@@ -158,7 +182,9 @@ export default function BrokerDashboard() {
             </table>
           </div>
         ) : (
-          <p className="p-6 text-center text-gray-500 text-lg">You have no active listings.</p>
+          <p className="p-6 text-center text-gray-500 text-lg">
+            You have no active listings.
+          </p>
         )}
       </div>
     </section>

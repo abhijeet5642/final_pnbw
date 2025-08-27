@@ -2,7 +2,6 @@
 
 import Enquiry from '../models/Enquiry.js';
 import Property from '../models/Property.js';
-import User from '../models/User.js';
 
 // @desc    Create a new enquiry
 // @route   POST /api/enquiries
@@ -21,25 +20,28 @@ export const createEnquiry = async (req, res) => {
       return res.status(404).json({ message: 'Property not found' });
     }
 
-    // Check if user has already enquired for this property
+    // ✅ Allow user to enquiry multiple properties
+    // ❌ But prevent duplicate enquiry for the SAME property
     const existingEnquiry = await Enquiry.findOne({
       property: propertyId,
       user: req.user._id,
     });
 
     if (existingEnquiry) {
-      return res.status(400).json({ message: 'You have already sent an enquiry for this property' });
+      return res.status(400).json({
+        message: 'You have already sent an enquiry for this property',
+      });
     }
 
     const enquiry = new Enquiry({
       property: propertyId,
-      user: req.user._id, // req.user is available from the 'protect' middleware
+      user: req.user._id, // from 'protect' middleware
     });
 
     const createdEnquiry = await enquiry.save();
     res.status(201).json(createdEnquiry);
   } catch (error) {
-    console.error(error);
+    console.error("Error creating enquiry:", error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -50,12 +52,13 @@ export const createEnquiry = async (req, res) => {
 export const getEnquiries = async (req, res) => {
   try {
     const enquiries = await Enquiry.find({})
-      .populate('user', 'fullName email phoneNumber') // Populate with user details
-      .populate('property', 'title location price') // Populate with property details
-      .sort({ createdAt: -1 }); // Show newest first
+      .populate('user', 'fullname email phoneNumber role') // consistent field casing
+      .populate('property', 'title location price')
+      .sort({ createdAt: -1 });
+
     res.json(enquiries);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching enquiries:", error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
