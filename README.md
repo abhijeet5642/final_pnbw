@@ -2,8 +2,10 @@ Live Link : https://pixienestbuildwell.com
 
 
 #Contributors: 
-Front end: Ashutosh sharan srivastava
-Back end: Abhijeet yadav
+#Front end: Ashutosh sharan srivastava
+
+
+#Back end: Abhijeet yadav
 
 # Real Estate Marketplace
 
